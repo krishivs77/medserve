@@ -18,6 +18,7 @@ def test_health_check():
         "service": "medserve-backend"
     }
 
+
 def test_model_info():
     response = client.get("/model-info")
 
@@ -34,6 +35,7 @@ def test_model_info():
     ]
     assert data["image_size"] == 224
     assert data["test_accuracy"] == 0.91
+
 
 def test_predict_endpoint():
     test_filename = "test_meningioma.jpg"
@@ -65,3 +67,46 @@ def test_predict_endpoint():
     assert "probabilities" in data
     assert "latency_ms" in data
     assert "low_confidence_flag" in data
+
+
+def test_get_predictions():
+    response = client.get("/predictions")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert isinstance(data, list)
+
+
+def test_get_prediction_by_id():
+    response = client.get("/predictions/1")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == 1
+    assert "predicted_class" in data
+    assert "confidence" in data
+    assert "review_status" in data
+
+
+def test_update_prediction_review():
+    response = client.patch(
+        "/predictions/1/review",
+        params={
+            "review_status": "reviewed",
+            "true_label": "meningioma",
+            "notes": "Reviewed during automated test."
+        }
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["review_status"] == "reviewed"
+    assert data["true_label"] == "meningioma"
+    assert data["correct"] in [True, False]
+    assert data["notes"] == "Reviewed during automated test."
