@@ -110,3 +110,18 @@ def test_update_prediction_review():
     assert data["true_label"] == "meningioma"
     assert data["correct"] in [True, False]
     assert data["notes"] == "Reviewed during automated test."
+
+
+def test_metrics_summary():
+    response = client.get("/metrics/summary")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert "total_predictions" in data
+    assert "average_confidence" in data
+    assert "low_confidence_count" in data
+    assert "average_latency_ms" in data
+    assert "reviewed_count" in data
+    assert "reviewed_accuracy" in data

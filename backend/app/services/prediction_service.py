@@ -84,6 +84,60 @@ class PredictionService:
         db.refresh(prediction)
 
         return prediction
+    
+    def get_summary_metrics(self, db):
+        predictions = db.query(Prediction).all()
+
+        total_predictions = len(predictions)
+
+        if total_predictions == 0:
+            return {
+                "total_predictions": 0,
+                "average_confidence": None,
+                "low_confidence_count": 0,
+                "average_latency_ms": None,
+                "reviewed_count": 0,
+                "reviewed_accuracy": None
+            }
+        
+        average_confidence = (
+            sum(prediction.confidence for prediction in predictions)
+            / total_predictions
+        )
+
+        low_confidence_count = sum(
+            1 for prediction in predictions
+            if prediction.low_confidence_flag
+        )
+
+        average_latency_ms = (
+            sum(prediction.latency_ms for prediction in predictions)
+            / total_predictions
+        )
+
+        reviewed_predictions = [
+            prediction for prediction in predictions
+            if prediction.correct is not None
+        ]
+
+        reviewed_count = len(reviewed_predictions)
+
+        if reviewed_count == 0:
+            reviewed_accuracy = None
+        else:
+            reviewed_accuracy = (
+                sum(1 for prediction in reviewed_predictions if prediction.correct)
+                / reviewed_count
+            )
+        
+        return {
+            "total_predictions": total_predictions,
+            "average_confidence": average_confidence,
+            "low_confidence_count": low_confidence_count,
+            "average_latency_ms": average_latency_ms,
+            "reviewed_count": reviewed_count,
+            "reviewed_accuracy": reviewed_accuracy
+        }
 
 
 prediction_service = PredictionService()
