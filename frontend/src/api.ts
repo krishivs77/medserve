@@ -19,3 +19,30 @@ export async function getModelInfo() {
 
   return response.json();
 }
+
+export async function predictImage(file: File) {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/predict`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to run prediction");
+  }
+
+  return response.json();
+}
+
+export async function getMetricsSummary() {
+  const response = await fetch(`${API_BASE_URL}/metrics/summary`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch metrics summary");
+  }
+
+  return response.json();
+}

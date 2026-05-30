@@ -130,6 +130,146 @@ button {
   font-size: 15px;
 }
 
+.upload-panel {
+  margin-top: 36px;
+  max-width: 760px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.upload-panel h2 {
+  margin: 0 0 18px;
+  font-size: 24px;
+  color: #111827;
+}
+
+.upload-panel .primary-button {
+  margin-top: 4px;
+}
+
+.prediction-result {
+  margin-top: 24px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+}
+
+.prediction-result h3 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  color: #111827;
+}
+
+.prediction-result p {
+  margin: 8px 0;
+  color: #374151;
+  font-size: 16px;
+}
+
 .error-text {
+  margin-top: 16px;
   color: #dc2626;
+  font-size: 16px;
+}
+
+.upload-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.file-upload {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+}
+
+.file-upload input {
+  display: none;
+}
+
+.file-button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 600;
+}
+
+.file-name {
+  color: #334155;
+}
+
+.upload-controls .primary-button {
+  height: 64px;
+  padding: 0 28px;
+}
+
+.metrics-panel {
+  margin-top: 36px;
+  max-width: 1120px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.metrics-panel h2 {
+  margin: 0 0 18px;
+  font-size: 24px;
+  color: #111827;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.metrics-grid div {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  background: #f9fafb;
+}
+
+.metrics-grid span {
+  display: block;
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.metrics-grid strong {
+  color: #111827;
+  font-size: 24px;
+}
+
+@media (max-width: 700px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
 }

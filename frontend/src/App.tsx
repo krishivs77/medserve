@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 
 import "./App.css";
-import { getHealth, getModelInfo } from "./api";
+import { 
+  getHealth, 
+  getMetricsSummary, 
+  getModelInfo, 
+  predictImage, 
+} from "./api";
 
 type HealthStatus = {
   status: string;
@@ -15,19 +20,45 @@ type ModelInfo = {
   test_accuracy: number;
 };
 
+type PredictionResult = {
+  prediction_id: number;
+  predicted_class: string;
+  confidence: number;
+  probabilities: Record<string, number>;
+  model_version: string;
+  latency_ms: number;
+  low_confidence_flag: boolean;
+};
+
+type MetricsSummary = {
+  total_predictions: number;
+  average_confidence: number | null;
+  low_confidence_count: number;
+  average_latency_ms: number | null;
+  reviewed_count: number;
+  reviewed_accuracy: number | null;
+};
+
 function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
   const [error, setError] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictionError, setPredictionError] = useState("");
+  const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
 
   useEffect(() => {
     async function loadBackendStatus() {
       try {
         const healthData = await getHealth();
         const modelData = await getModelInfo();
+        const metricsData = await getMetricsSummary();
 
         setHealth(healthData);
         setModelInfo(modelData);
+        setMetrics(metricsData);
       } catch {
         setError("Unable to connect to MedServe backend.");
       }
@@ -35,6 +66,26 @@ function App() {
 
     loadBackendStatus();
   }, []);
+
+      async function handlePrediction() {
+        if (!selectedFile) {
+          setPredictionError("Please choose an MRI image first.");
+          return;
+        }
+
+        setIsPredicting(true);
+        setPredictionError("");
+        setPrediction(null);
+
+        try {
+          const result = await predictImage(selectedFile);
+          setPrediction(result);
+        } catch {
+          setPredictionError("Prediction failed. Make sure the backend is running.");
+        } finally {
+          setIsPredicting(false);
+        }
+      }
 
   return (
     <main className="app">
@@ -48,11 +99,6 @@ function App() {
           logging predictions, and monitoring confidence, latency, and review
           workflows.
         </p>
-
-        <div className="hero-actions">
-          <button className="primary-button">Upload MRI</button>
-          <button className="secondary-button">View Monitoring</button>
-        </div>
 
         <div className="status-panel">
           <h2>Backend Status</h2>
@@ -85,6 +131,113 @@ function App() {
             </div>
           )}
         </div>
+        <div className="upload-panel">
+          <h2>Run MRI Prediction</h2>
+
+          <div className="upload-controls">
+            <label className="file-upload">
+              <span className="file-button">Choose File</span>
+              <span className="file-name">
+                {selectedFile ? selectedFile.name : "No file selected"}
+              </span>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  setSelectedFile(file);
+                  setPrediction(null);
+                  setPredictionError("");
+                }}
+              />
+            </label>
+
+            <button
+              className="primary-button"
+              onClick={handlePrediction}
+              disabled={isPredicting}
+            >
+              {isPredicting ? "Running prediction..." : "Predict"}
+            </button>
+          </div>
+
+          {predictionError && <p className="error-text">{predictionError}</p>}
+
+          {prediction && (
+            <div className="prediction-result">
+              <h3>Prediction Result</h3>
+
+              <p>
+                <strong>Class:</strong> {prediction.predicted_class}
+              </p>
+
+              <p>
+                <strong>Confidence:</strong>{" "}
+                {(prediction.confidence * 100).toFixed(2)}%
+              </p>
+
+              <p>
+                <strong>Latency:</strong> {prediction.latency_ms} ms
+              </p>
+
+              <p>
+                <strong>Low Confidence:</strong>{" "}
+                {prediction.low_confidence_flag ? "Yes" : "No"}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {metrics && (
+          <div className="metrics-panel">
+            <h2>Monitoring Summary</h2>
+
+            <div className="metrics-grid">
+              <div>
+                <span>Total Predictions</span>
+                <strong>{metrics.total_predictions}</strong>
+              </div>
+
+              <div>
+                <span>Average Confidence</span>
+                <strong>
+                  {metrics.average_confidence === null
+                    ? "N/A"
+                    : `${(metrics.average_confidence * 100).toFixed(1)}%`}
+                </strong>
+              </div>
+
+              <div>
+                <span>Low Confidence Cases</span>
+                <strong>{metrics.low_confidence_count}</strong>
+              </div>
+
+              <div>
+                <span>Average Latency</span>
+                <strong>
+                  {metrics.average_latency_ms === null
+                    ? "N/A"
+                    : `${metrics.average_latency_ms.toFixed(1)} ms`}
+                </strong>
+              </div>
+
+              <div>
+                <span>Reviewed</span>
+                <strong>{metrics.reviewed_count}</strong>
+              </div>
+
+              <div>
+                <span>Reviewed Accuracy</span>
+                <strong>
+                  {metrics.reviewed_accuracy === null
+                    ? "N/A"
+                    : `${(metrics.reviewed_accuracy * 100).toFixed(1)}%`}
+                </strong>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="cards">
