@@ -5,7 +5,9 @@ import {
   getHealth, 
   getMetricsSummary, 
   getModelInfo, 
+  getPredictions,
   predictImage, 
+  updatePredictionReview,
 } from "./api";
 
 type HealthStatus = {
@@ -39,6 +41,18 @@ type MetricsSummary = {
   reviewed_accuracy: number | null;
 };
 
+type Prediction = {
+  id: number;
+  filename: string;
+  predicted_class: string;
+  confidence: number;
+  review_status: string;
+  created_at: string;
+  true_label: string | null;
+  correct: boolean | null;
+  notes: string | null;
+};
+
 function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
@@ -48,6 +62,14 @@ function App() {
   const [isPredicting, setIsPredicting] = useState(false);
   const [predictionError, setPredictionError] = useState("");
   const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [selectedPrediction, setSelectedPrediction] =
+    useState<Prediction | null>(null);
+
+  const [reviewStatus, setReviewStatus] = useState("reviewed");
+  const [trueLabel, setTrueLabel] = useState("");
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [reviewMessage, setReviewMessage] = useState("");
 
   useEffect(() => {
     async function loadBackendStatus() {
@@ -55,10 +77,12 @@ function App() {
         const healthData = await getHealth();
         const modelData = await getModelInfo();
         const metricsData = await getMetricsSummary();
+        const predictionsData = await getPredictions();
 
         setHealth(healthData);
         setModelInfo(modelData);
         setMetrics(metricsData);
+        setPredictions(predictionsData);
       } catch {
         setError("Unable to connect to MedServe backend.");
       }
@@ -80,11 +104,40 @@ function App() {
         try {
           const result = await predictImage(selectedFile);
           setPrediction(result);
+          const updatedMetrics = await getMetricsSummary();
+          const updatedPredictions = await getPredictions();
+
+          setMetrics(updatedMetrics);
+          setPredictions(updatedPredictions);
         } catch {
           setPredictionError("Prediction failed. Make sure the backend is running.");
         } finally {
           setIsPredicting(false);
         }
+      }
+
+      async function handleSaveReview() {
+        if (!selectedPrediction || !trueLabel) {
+          setReviewMessage("Select a prediction and true label first.");
+          return;
+        }
+
+        await updatePredictionReview(selectedPrediction.id, {
+          reviewStatus,
+          trueLabel,
+          notes: reviewNotes,
+        });
+
+        const updatedPredictions = await getPredictions();
+        const updatedMetrics = await getMetricsSummary();
+
+        setPredictions(updatedPredictions);
+        setMetrics(updatedMetrics);
+        setReviewMessage("Review saved.");
+
+        setSelectedPrediction(null);
+        setTrueLabel("");
+        setReviewNotes("");
       }
 
   return (
@@ -238,6 +291,108 @@ function App() {
             </div>
           </div>
         )}
+
+        <div className="history-panel">
+          <h2>Prediction History</h2>
+
+          {predictions.length === 0 ? (
+            <p>No predictions logged yet.</p>
+          ) : (
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Filename</th>
+                    <th>Prediction</th>
+                    <th>Confidence</th>
+                    <th>Review Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {predictions.map((prediction) => (
+                    <tr
+                      key={prediction.id}
+                      className={
+                        selectedPrediction?.id === prediction.id
+                          ? "selected-row"
+                          : ""
+                      }
+                      onClick={() => {
+                        setSelectedPrediction(prediction);
+                        setReviewStatus(prediction.review_status);
+                        setTrueLabel(prediction.true_label ?? "");
+                        setReviewNotes(prediction.notes ?? "");
+                        setReviewMessage("");
+                      }}
+                    >
+                      <td>{prediction.id}</td>
+                      <td>{prediction.filename}</td>
+                      <td>{prediction.predicted_class}</td>
+                      <td>{(prediction.confidence * 100).toFixed(1)}%</td>
+                      <td>{prediction.review_status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {selectedPrediction && (
+            <div className="review-panel">
+              <h3>Review Prediction #{selectedPrediction.id}</h3>
+
+              <p>
+                Predicted <strong>{selectedPrediction.predicted_class}</strong> for{" "}
+                <strong>{selectedPrediction.filename}</strong>
+              </p>
+
+              <div className="review-form">
+                <label>
+                  Review Status
+                  <select
+                    value={reviewStatus}
+                    onChange={(event) => setReviewStatus(event.target.value)}
+                  >
+                    <option value="reviewed">reviewed</option>
+                    <option value="flagged">flagged</option>
+                    <option value="pending_review">pending_review</option>
+                  </select>
+                </label>
+
+                <label>
+                  True Label
+                  <select
+                    value={trueLabel}
+                    onChange={(event) => setTrueLabel(event.target.value)}
+                  >
+                    <option value="">Select true label</option>
+                    <option value="glioma">glioma</option>
+                    <option value="meningioma">meningioma</option>
+                    <option value="notumor">notumor</option>
+                    <option value="pituitary">pituitary</option>
+                  </select>
+                </label>
+
+                <label>
+                  Notes
+                  <textarea
+                    value={reviewNotes}
+                    onChange={(event) => setReviewNotes(event.target.value)}
+                    placeholder="Add review notes..."
+                  />
+                </label>
+
+                <button className="primary-button" onClick={handleSaveReview}>
+                  Save Review
+                </button>
+              </div>
+
+              {reviewMessage && <p className="review-message">{reviewMessage}</p>}
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="cards">

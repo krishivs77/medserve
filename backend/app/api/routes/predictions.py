@@ -32,6 +32,7 @@ def get_predictions(
             "created_at": prediction.created_at,
             "low_confidence_flag": prediction.low_confidence_flag,
             "review_status": prediction.review_status,
+            "notes": prediction.notes,
             "true_label": prediction.true_label,
             "correct": prediction.correct,
         }

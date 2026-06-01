@@ -46,3 +46,43 @@ export async function getMetricsSummary() {
 
   return response.json();
 }
+
+export async function getPredictions() {
+  const response = await fetch(`${API_BASE_URL}/predictions`)
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch predictions");
+  }
+
+  return response.json();
+}
+
+type ReviewPredictionInput = {
+  reviewStatus: string;
+  trueLabel: string;
+  notes: string;
+};
+
+export async function updatePredictionReview(
+  predictionId: number,
+  review: ReviewPredictionInput
+) {
+  const params = new URLSearchParams();
+
+  params.append("review_status", review.reviewStatus);
+  params.append("true_label", review.trueLabel);
+  params.append("notes", review.notes);
+
+  const response = await fetch(
+    `${API_BASE_URL}/predictions/${predictionId}/review?${params.toString()}`,
+    {
+      method: "PATCH",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to update prediction review");
+  }
+
+  return response.json();
+}
