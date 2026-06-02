@@ -9,7 +9,6 @@ import {
   getModelInfo, 
   getPredictions,
   predictImage, 
-  updatePredictionReview,
 } from "../api";
 
 type HealthStatus = {
@@ -65,13 +64,6 @@ function DashboardPage() {
   const [predictionError, setPredictionError] = useState("");
   const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [selectedPrediction, setSelectedPrediction] =
-    useState<Prediction | null>(null);
-
-  const [reviewStatus, setReviewStatus] = useState("reviewed");
-  const [trueLabel, setTrueLabel] = useState("");
-  const [reviewNotes, setReviewNotes] = useState("");
-  const [reviewMessage, setReviewMessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -119,30 +111,6 @@ function DashboardPage() {
         } finally {
           setIsPredicting(false);
         }
-      }
-
-      async function handleSaveReview() {
-        if (!selectedPrediction || !trueLabel) {
-          setReviewMessage("Select a prediction and true label first.");
-          return;
-        }
-
-        await updatePredictionReview(selectedPrediction.id, {
-          reviewStatus,
-          trueLabel,
-          notes: reviewNotes,
-        });
-
-        const updatedPredictions = await getPredictions();
-        const updatedMetrics = await getMetricsSummary();
-
-        setPredictions(updatedPredictions);
-        setMetrics(updatedMetrics);
-        setReviewMessage("Review saved.");
-
-        setSelectedPrediction(null);
-        setTrueLabel("");
-        setReviewNotes("");
       }
 
       const classCounts = predictions.reduce<Record<string, number>>(
@@ -329,72 +297,74 @@ function DashboardPage() {
           </div>
         )}
 
-        <div className="chart-panel">
-          <h2>Prediction Distribution</h2>
+        <div className="charts-grid">
+          <div className="chart-panel">
+            <h2>Prediction Distribution</h2>
 
-          {Object.entries(classCounts).map(([className, count]) => (
-            <div className="chart-row" key={className}>
-              <div className="chart-label">
-                <span>{className}</span>
-                <strong>{count}</strong>
+            {Object.entries(classCounts).map(([className, count]) => (
+              <div className="chart-row" key={className}>
+                <div className="chart-label">
+                  <span>{className}</span>
+                  <strong>{count}</strong>
+                </div>
+
+                <div className="chart-track">
+                  <div
+                    className="chart-fill"
+                    style={{
+                      width: `${(count / maxClassCount) * 100}%`,
+                    }}
+                  />
+                </div>
               </div>
+            ))}
+          </div>
 
-              <div className="chart-track">
-                <div
-                  className="chart-fill"
-                  style={{
-                    width: `${(count / maxClassCount) * 100}%`,
-                  }}
-                />
+          <div className="chart-panel">
+            <h2>Review Status Distribution</h2>
+
+            {Object.entries(reviewCounts).map(([status, count]) => (
+              <div className="chart-row" key={status}>
+                <div className="chart-label">
+                  <span>{status}</span>
+                  <strong>{count}</strong>
+                </div>
+
+                <div className="chart-track">
+                  <div
+                    className="chart-fill"
+                    style={{
+                      width: `${(count / maxReviewCount) * 100}%`,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="chart-panel">
-          <h2>Review Status Distribution</h2>
+          <div className="chart-panel">
+            <h2>Lowest Confidence Predictions</h2>
 
-          {Object.entries(reviewCounts).map(([status, count]) => (
-            <div className="chart-row" key={status}>
-              <div className="chart-label">
-                <span>{status}</span>
-                <strong>{count}</strong>
+            {lowConfidencePredictions.map((prediction) => (
+              <div
+                key={prediction.id}
+                className="low-confidence-row"
+                onClick={() =>
+                  navigate(`/predictions/${prediction.id}`)
+                }
+              >
+                <div>
+                  <strong>#{prediction.id}</strong>
+                </div>
+
+                <div>{prediction.predicted_class}</div>
+
+                <div>
+                  {(prediction.confidence * 100).toFixed(2)}%
+                </div>
               </div>
-
-              <div className="chart-track">
-                <div
-                  className="chart-fill"
-                  style={{
-                    width: `${(count / maxReviewCount) * 100}%`,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="chart-panel">
-          <h2>Lowest Confidence Predictions</h2>
-
-          {lowConfidencePredictions.map((prediction) => (
-            <div
-              key={prediction.id}
-              className="low-confidence-row"
-              onClick={() =>
-                navigate(`/predictions/${prediction.id}`)
-              }
-            >
-              <div>
-                <strong>#{prediction.id}</strong>
-              </div>
-
-              <div>{prediction.predicted_class}</div>
-
-              <div>
-                {(prediction.confidence * 100).toFixed(2)}%
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <div className="history-panel">
@@ -430,60 +400,6 @@ function DashboardPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          )}
-
-          {selectedPrediction && (
-            <div className="review-panel">
-              <h3>Review Prediction #{selectedPrediction.id}</h3>
-
-              <p>
-                Predicted <strong>{selectedPrediction.predicted_class}</strong> for{" "}
-                <strong>{selectedPrediction.filename}</strong>
-              </p>
-
-              <div className="review-form">
-                <label>
-                  Review Status
-                  <select
-                    value={reviewStatus}
-                    onChange={(event) => setReviewStatus(event.target.value)}
-                  >
-                    <option value="reviewed">reviewed</option>
-                    <option value="flagged">flagged</option>
-                    <option value="pending_review">pending_review</option>
-                  </select>
-                </label>
-
-                <label>
-                  True Label
-                  <select
-                    value={trueLabel}
-                    onChange={(event) => setTrueLabel(event.target.value)}
-                  >
-                    <option value="">Select true label</option>
-                    <option value="glioma">glioma</option>
-                    <option value="meningioma">meningioma</option>
-                    <option value="notumor">notumor</option>
-                    <option value="pituitary">pituitary</option>
-                  </select>
-                </label>
-
-                <label>
-                  Notes
-                  <textarea
-                    value={reviewNotes}
-                    onChange={(event) => setReviewNotes(event.target.value)}
-                    placeholder="Add review notes..."
-                  />
-                </label>
-
-                <button className="primary-button" onClick={handleSaveReview}>
-                  Save Review
-                </button>
-              </div>
-
-              {reviewMessage && <p className="review-message">{reviewMessage}</p>}
             </div>
           )}
         </div>
