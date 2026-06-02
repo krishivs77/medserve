@@ -482,3 +482,54 @@ tbody tr:hover {
   gap: 28px;
   margin-top: 28px;
 }
+
+.chart-panel {
+  margin-top: 36px;
+  max-width: 1120px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.chart-panel h2 {
+  margin: 0 0 18px;
+  font-size: 24px;
+  color: #111827;
+}
+
+.chart-row {
+  margin-bottom: 18px;
+}
+
+.chart-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.chart-track {
+  height: 12px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.chart-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.low-confidence-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.low-confidence-row:hover {
+  background: #f8fafc;
+}

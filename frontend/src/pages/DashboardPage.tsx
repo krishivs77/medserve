@@ -145,6 +145,38 @@ function DashboardPage() {
         setReviewNotes("");
       }
 
+      const classCounts = predictions.reduce<Record<string, number>>(
+        (counts, prediction) => {
+          counts[prediction.predicted_class] =
+            (counts[prediction.predicted_class] ?? 0) + 1;
+
+          return counts;
+        },
+        {}
+      );
+
+      const maxClassCount = Math.max(...Object.values(classCounts), 1);
+
+      const reviewCounts = predictions.reduce<Record<string, number>>(
+        (counts, prediction) => {
+          const status = prediction.review_status ?? "unknown";
+
+          counts[status] = (counts[status] ?? 0) + 1;
+
+          return counts;
+        },
+        {}
+      );
+
+      const maxReviewCount = Math.max(
+        ...Object.values(reviewCounts),
+        1
+      );
+
+      const lowConfidencePredictions = [...predictions]
+        .sort((a, b) => a.confidence - b.confidence)
+        .slice(0, 5);
+
   return (
     <main className="app">
       <section className="hero">
@@ -296,6 +328,74 @@ function DashboardPage() {
             </div>
           </div>
         )}
+
+        <div className="chart-panel">
+          <h2>Prediction Distribution</h2>
+
+          {Object.entries(classCounts).map(([className, count]) => (
+            <div className="chart-row" key={className}>
+              <div className="chart-label">
+                <span>{className}</span>
+                <strong>{count}</strong>
+              </div>
+
+              <div className="chart-track">
+                <div
+                  className="chart-fill"
+                  style={{
+                    width: `${(count / maxClassCount) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="chart-panel">
+          <h2>Review Status Distribution</h2>
+
+          {Object.entries(reviewCounts).map(([status, count]) => (
+            <div className="chart-row" key={status}>
+              <div className="chart-label">
+                <span>{status}</span>
+                <strong>{count}</strong>
+              </div>
+
+              <div className="chart-track">
+                <div
+                  className="chart-fill"
+                  style={{
+                    width: `${(count / maxReviewCount) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="chart-panel">
+          <h2>Lowest Confidence Predictions</h2>
+
+          {lowConfidencePredictions.map((prediction) => (
+            <div
+              key={prediction.id}
+              className="low-confidence-row"
+              onClick={() =>
+                navigate(`/predictions/${prediction.id}`)
+              }
+            >
+              <div>
+                <strong>#{prediction.id}</strong>
+              </div>
+
+              <div>{prediction.predicted_class}</div>
+
+              <div>
+                {(prediction.confidence * 100).toFixed(2)}%
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div className="history-panel">
           <h2>Prediction History</h2>

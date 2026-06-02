@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { getPredictionById, getPredictions } from "../api";
+import { getPredictionById, getPredictions, updatePredictionReview } from "../api";
 import "../App.css";
 
 
@@ -32,6 +32,11 @@ function PredictionDetailsPage() {
 
     const [error, setError] = useState("");
 
+		const [reviewStatus, setReviewStatus] = useState("reviewed");
+		const [trueLabel, setTrueLabel] = useState("");
+		const [reviewNotes, setReviewNotes] = useState("");
+		const [reviewMessage, setReviewMessage] = useState("");
+
     useEffect(() => {
       async function loadPrediction() {
         try {
@@ -40,6 +45,9 @@ function PredictionDetailsPage() {
           );
 
           setPrediction(predictionData);
+					setReviewStatus(predictionData.review_status);
+					setTrueLabel(predictionData.true_label ?? "");
+					setReviewNotes(predictionData.notes ?? "");
 					const predictionsData = await getPredictions();
 					const maxId = Math.max(...predictionsData.map((p: { id: number }) => p.id));
 					setMaxPredictionId(maxId);
@@ -50,6 +58,27 @@ function PredictionDetailsPage() {
 
       loadPrediction();
     }, [predictionId]);
+
+		async function handleSaveReview() {
+			if (!prediction || !trueLabel) {
+				setReviewMessage("Select a true label first.");
+				return;
+			}
+
+			await updatePredictionReview(prediction.id, {
+				reviewStatus,
+				trueLabel,
+				notes: reviewNotes,
+			});
+
+			const updatedPrediction = await getPredictionById(prediction.id);
+
+			setPrediction(updatedPrediction);
+			setReviewStatus(updatedPrediction.review_status);
+			setTrueLabel(updatedPrediction.true_label ?? "");
+			setReviewNotes(updatedPrediction.notes ?? "");
+			setReviewMessage("Review saved.");
+		}
 
     return (
 			<main className="app">
@@ -188,6 +217,58 @@ function PredictionDetailsPage() {
 									</div>
 								</section>
 							</div>
+
+							<section className="detail-card">
+								<h2>Review Prediction</h2>
+
+								<p>
+									Predicted <strong>{prediction.predicted_class}</strong> for{" "}
+									<strong>{prediction.filename}</strong>
+								</p>
+
+								<div className="review-form">
+									<label>
+										Review Status
+										<select
+											value={reviewStatus}
+											onChange={(event) => setReviewStatus(event.target.value)}
+										>
+											<option value="reviewed">reviewed</option>
+											<option value="flagged">flagged</option>
+											<option value="pending_review">pending_review</option>
+										</select>
+									</label>
+
+									<label>
+										True Label
+										<select
+											value={trueLabel}
+											onChange={(event) => setTrueLabel(event.target.value)}
+										>
+											<option value="">Select true label</option>
+											<option value="glioma">glioma</option>
+											<option value="meningioma">meningioma</option>
+											<option value="notumor">notumor</option>
+											<option value="pituitary">pituitary</option>
+										</select>
+									</label>
+
+									<label>
+										Notes
+										<textarea
+											value={reviewNotes}
+											onChange={(event) => setReviewNotes(event.target.value)}
+											placeholder="Add review notes..."
+										/>
+									</label>
+
+									<button className="primary-button" onClick={handleSaveReview}>
+										Save Review
+									</button>
+								</div>
+
+								{reviewMessage && <p className="review-message">{reviewMessage}</p>}
+							</section>
 						</>
 					)}
 				</section>
