@@ -216,59 +216,59 @@ function PredictionDetailsPage() {
 										</div>
 									</div>
 								</section>
+
+								<section className="detail-card">
+									<h2>Review Prediction</h2>
+
+									<p>
+										Predicted <strong>{prediction.predicted_class}</strong> for{" "}
+										<strong>{prediction.filename}</strong>
+									</p>
+
+									<div className="review-form">
+										<label>
+											Review Status
+											<select
+												value={reviewStatus}
+												onChange={(event) => setReviewStatus(event.target.value)}
+											>
+												<option value="reviewed">reviewed</option>
+												<option value="flagged">flagged</option>
+												<option value="pending_review">pending_review</option>
+											</select>
+										</label>
+
+										<label>
+											True Label
+											<select
+												value={trueLabel}
+												onChange={(event) => setTrueLabel(event.target.value)}
+											>
+												<option value="">Select true label</option>
+												<option value="glioma">glioma</option>
+												<option value="meningioma">meningioma</option>
+												<option value="notumor">notumor</option>
+												<option value="pituitary">pituitary</option>
+											</select>
+										</label>
+
+										<label>
+											Notes
+											<textarea
+												value={reviewNotes}
+												onChange={(event) => setReviewNotes(event.target.value)}
+												placeholder="Add review notes..."
+											/>
+										</label>
+
+										<button className="primary-button" onClick={handleSaveReview}>
+											Save Review
+										</button>
+									</div>
+
+									{reviewMessage && <p className="review-message">{reviewMessage}</p>}
+								</section>
 							</div>
-
-							<section className="detail-card">
-								<h2>Review Prediction</h2>
-
-								<p>
-									Predicted <strong>{prediction.predicted_class}</strong> for{" "}
-									<strong>{prediction.filename}</strong>
-								</p>
-
-								<div className="review-form">
-									<label>
-										Review Status
-										<select
-											value={reviewStatus}
-											onChange={(event) => setReviewStatus(event.target.value)}
-										>
-											<option value="reviewed">reviewed</option>
-											<option value="flagged">flagged</option>
-											<option value="pending_review">pending_review</option>
-										</select>
-									</label>
-
-									<label>
-										True Label
-										<select
-											value={trueLabel}
-											onChange={(event) => setTrueLabel(event.target.value)}
-										>
-											<option value="">Select true label</option>
-											<option value="glioma">glioma</option>
-											<option value="meningioma">meningioma</option>
-											<option value="notumor">notumor</option>
-											<option value="pituitary">pituitary</option>
-										</select>
-									</label>
-
-									<label>
-										Notes
-										<textarea
-											value={reviewNotes}
-											onChange={(event) => setReviewNotes(event.target.value)}
-											placeholder="Add review notes..."
-										/>
-									</label>
-
-									<button className="primary-button" onClick={handleSaveReview}>
-										Save Review
-									</button>
-								</div>
-
-								{reviewMessage && <p className="review-message">{reviewMessage}</p>}
-							</section>
 						</>
 					)}
 				</section>

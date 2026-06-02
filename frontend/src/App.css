@@ -354,12 +354,12 @@ tbody tr:hover {
 .review-form {
   max-width: 640px;
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 
 .review-form label {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   color: #374151;
   font-weight: 600;
 }
