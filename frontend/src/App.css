@@ -388,3 +388,97 @@ tbody tr:hover {
   color: #2563eb;
   font-weight: 600;
 }
+
+.detail-card {
+  max-width: 760px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.detail-card h2 {
+  margin: 0 0 18px;
+  font-size: 22px;
+}
+
+.probability-row {
+  margin-bottom: 18px;
+}
+
+.probability-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.probability-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.probability-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.details-grid {
+  max-width: 760px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.detail-list {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-list span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.detail-list strong {
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+@media (max-width: 700px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hero > a {
+  display: inline-block;
+  margin-bottom: 18px;
+}
+
+.prediction-nav {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  margin-bottom: 28px;
+}
+
+.prediction-nav button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.prediction-details-stack {
+  display: grid;
+  gap: 28px;
+  margin-top: 28px;
+}

@@ -86,3 +86,13 @@ export async function updatePredictionReview(
 
   return response.json();
 }
+
+export async function getPredictionById(predictionId: number) {
+  const response = await fetch(`${API_BASE_URL}/predictions/${predictionId}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch prediction details");
+  }
+
+  return response.json();
+}
