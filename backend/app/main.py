@@ -26,6 +26,8 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://medserve.vercel.app/",
+        "https://medserve.vercel.app",
+        "https://vercel.live",
     ],
     allow_credentials=True,
     allow_methods=["*"],
